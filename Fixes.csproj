@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <Compile Remove="examples\**\*.cs" />
+    <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
 
   <Target Name="CreateZip" AfterTargets="Publish">

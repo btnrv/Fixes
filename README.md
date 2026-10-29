@@ -88,7 +88,15 @@ everyone connected. In-game mutes still work as normal.
 
 Advertising bots connect just long enough to post a message, without ever
 joining the game or showing on the scoreboard. This fix only lets chat through
-from players who actually joined.
+from clients whose current sign-on state is `SIGNONSTATE_FULL`. Steam
+authorization and reaching `SIGNONSTATE_SPAWN` alone do not enable chat.
+
+Both `say` and `say_team` are checked before chat listeners and chat-command
+dispatch, so other chat handlers and silent commands cannot bypass the gate.
+The chat callback also checks the current state. Addon downloads, forced
+reconnects and map transitions therefore cannot retain permission to chat from
+an earlier sign-on. Fully joined spectators and dead players can still chat;
+unrelated client commands and server-console chat are unaffected.
 
 ### Jump macro abuse
 

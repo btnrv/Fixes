@@ -16,8 +16,6 @@ internal readonly struct RampFixTpmCandidate(bool overrode, Vector origin, Vecto
 
 internal sealed class PlayerData
 {
-    public volatile bool InGame;
-
     public int LastJumpTick = -1;
 
     public ulong VoiceSeed;
