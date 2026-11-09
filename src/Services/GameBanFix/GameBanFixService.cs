@@ -88,9 +88,35 @@ internal class GameBanFixService : IDisposable
                     ref var gcBanInfoMap = ref Unsafe.AsRef<CUtlMap<uint, CGcBanInformation_t, uint>>((void*)GcBanInfoAddress);
 
                     if (gcBanInfoMap.Count > 0)
-                        gcBanInfoMap.RemoveAll();
+                        RemoveAll(ref gcBanInfoMap.Tree);
                 };
             }
         });
+    }
+
+    // SwiftlyS2's CUtlRBTree.RemoveAll zeroes every node right after linking it into the free list,
+    // which leaves the game's free list pointing at node 0 again and again. The game's next inserts then
+    // reuse a node that's still in the tree, and the corrupted map later sends Unlink to an invalid index.
+    // Free the nodes the way the engine's RemoveAll does, without touching the rest of their memory.
+    private static void RemoveAll(ref CUtlRBTree<CUtlMapTreeNode<uint, CGcBanInformation_t>, uint> tree)
+    {
+        var lastAlloc = tree.LastAlloc.Index;
+        if (lastAlloc == tree.InvalidIndex())
+        {
+            return;
+        }
+
+        for (var i = 0u; i <= lastAlloc; i++)
+        {
+            if (tree.IsValidIndex(i))
+            {
+                tree.SetRightChild(i, tree.FirstFree);
+                tree.SetLeftChild(i, i);
+                tree.FirstFree = i;
+            }
+        }
+
+        tree.Root = tree.InvalidIndex();
+        tree.NumElements = 0;
     }
 }
